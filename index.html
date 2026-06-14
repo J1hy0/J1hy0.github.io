@@ -165,7 +165,7 @@ html, body { width:100%; height:100%; overflow:hidden; font-family: 'Microsoft Y
 .deck-body { display:flex; gap:12px; flex:1; min-height:0; overflow:hidden; }
 .deck-presets { width:140px; min-width:140px; display:flex; flex-direction:column; gap:8px; padding:4px 0; border-right:1px solid var(--card-border); }
 .preset-title { font-size:14px; font-weight:600; color:var(--text-muted); margin-bottom:4px; }
-.preset-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:14px 8px; border-radius:10px; background:rgba(255,255,255,0.04); border:2px solid var(--card-border); color:var(--text); cursor:pointer; font-family:var(--font-stack); transition:0.2s; }
+.preset-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:14px 8px; border-radius:10px; background:rgba(255,255,255,0.04); border:2px solid var(--card-border); color:var(--text); cursor:pointer; font-family:var(--font-stack); transition:0.2s; flex-shrink:0; }
 .preset-btn:hover { border-color:var(--accent-gold); background:rgba(232,184,109,0.08); }
 .preset-btn:active { background:rgba(232,184,109,0.15); }
 .preset-name { font-size:14px; font-weight:600; }
@@ -322,7 +322,7 @@ html, body { width:100%; height:100%; overflow:hidden; font-family: 'Microsoft Y
   .card-type-badge { width: 18px; height: 18px; font-size: 9px; }
 
   .deck-body { flex-direction: column; }
-  .deck-presets { width: 100%; min-width: 0; flex-direction: row; gap: 6px; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--card-border); padding-bottom: 8px; }
+  .deck-presets { width: 100%; min-width: 0; flex-direction: row; gap: 6px; overflow-x: auto; flex-wrap: nowrap; border-right: none; border-bottom: 1px solid var(--card-border); padding-bottom: 8px; }
   .deck-card-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
   .deck-card-item { padding: 10px; gap: 4px; }
   .deck-card-name { font-size: 14px; }
@@ -336,7 +336,7 @@ html, body { width:100%; height:100%; overflow:hidden; font-family: 'Microsoft Y
   .deck-card-archetype-badge { font-size: 10px; padding: 1px 6px; }
   .deck-card-type-text { font-size: 9px; }
   .deck-card-checkbox { width: 18px; height: 18px; }
-  .preset-btn { padding: 10px 12px; }
+  .preset-btn { padding: 10px 12px; max-width: 60%; }
   .preset-name { font-size: 12px; }
   .preset-desc { font-size: 9px; }
   .btn-start-game { font-size: 15px; padding: 10px 24px; }
@@ -605,6 +605,7 @@ function initSettings() {
 }
 
 var CHANGELOG = [
+  { date: "2026-06-14", text: "·调整肉食的产量，每回合获得的肉食减少1点<br>·安居技能调整：1回合提高50%抵挡率->2回合提高30%抵挡率<br>·新增基本春晖体系2推荐卡组" },
   { date: "2026-06-10", text: "增强老鼠，将藏匿中获得的素食由1->2" },
   { date: "2026-06-09", text: "新增松鸦、松鼠、狮子三张卡牌，完善春晖体系" },
   { date: "2026-06-08", text: "添加释放技能的交互方式以及技能文本描述的切换开关" },
@@ -1121,9 +1122,9 @@ defSkill("掷物伤人", {v:0}, "消耗所有的指示器储存值，每有2点�
   you.vegIndicator = 0;
   this.logDesc = you.name + '消耗' + val + '点指示器，造成' + hits + '次共' + totalDmg + '点伤害';
 });
-defSkill("安居", {v:5}, "本回合内临时提高50%抵挡率", function(you,enemy,ctx){
-  you.addBuff(makeBuff("安居", true, 1, "临时提高50%抵挡率", {defendRate:function(r){return r+50;}}));
-  this.logDesc = you.name + '安居乐业，抵挡率临时提高50%';
+defSkill("安居", {v:5}, "临时提高30%抵挡率两回合", function(you,enemy,ctx){
+  you.addBuff(makeBuff("安居", true, 2, "临时提高30%抵挡率", {defendRate:function(r){return r+30;}}));
+  this.logDesc = you.name + '安居乐业，抵挡率临时提高30%';
 });
 
 // ===== BUFF FACTORY =====
@@ -1248,6 +1249,7 @@ function createCard(cardDef) {
 // ===== RESOURCE LEVEL CONFIG =====
 var LEVEL_EXP = [0, 10, 20, 40, 60];
 var LEVEL_TO_NUM = [0, 3, 4, 6, 8, 12];
+var MEAT_TO_NUM = [0, 2, 3, 5, 7, 11];
 
 // ===== PLAYER CLASS =====
 function Player(name, isBoss, maxHp) {
@@ -1467,31 +1469,32 @@ Player.prototype = {
 
   getResources: function() {
     this._veg += LEVEL_TO_NUM[this.vegetarian_level];
-    this._meat += LEVEL_TO_NUM[this.meat_level];
+    this._meat += MEAT_TO_NUM[this.meat_level];
     this._wat += LEVEL_TO_NUM[this.water_level];
     if (this.hasBuff("播种")) this._veg += 4;
   },
 
   calcExp: function(value, type) {
-    var level;
-    if (type === 0) level = this.vegetarian_level;
-    else if (type === 1) level = this.meat_level;
-    else level = this.water_level;
-    var needExp = LEVEL_EXP[level] || 999;
-    if (value >= needExp) {
+    while (true) {
+      var level;
+      if (type === 0) level = this.vegetarian_level;
+      else if (type === 1) level = this.meat_level;
+      else level = this.water_level;
+      if (level >= 5) return value;
+      var needExp = LEVEL_EXP[level] || 999;
+      if (value < needExp) return value;
       if (type === 0) {
-        this.vegetarian_level = Math.min(5, this.vegetarian_level + 1);
+        this.vegetarian_level++;
         game.addLog(this.name + '的农田升级，当前等级为' + this.vegetarian_level);
       } else if (type === 1) {
-        this.meat_level = Math.min(5, this.meat_level + 1);
+        this.meat_level++;
         game.addLog(this.name + '的牧场升级，当前等级为' + this.meat_level);
       } else {
-        this.water_level = Math.min(5, this.water_level + 1);
+        this.water_level++;
         game.addLog(this.name + '的湖泊升级，当前等级为' + this.water_level);
       }
-      return value - needExp;
+      value -= needExp;
     }
-    return value;
   },
 
   useSkill: function(card, skill) {
@@ -2019,7 +2022,8 @@ var MIN_DECK_SIZE = 8;
 
 var PRESETS = {
   qiqiao: { name: "基本乞巧体系", desc: "猛兽+乞巧组合，利用月相循环机制打出高额伤害", cards: ["老虎","猪","猎豹","乞巧族-猫长老","乞巧族-鼠力士","乞巧族-狐先知","乞巧族-月桂兔","乞巧族-金鱼圣女"] },
-  chunhui: { name: "基本春晖体系", desc: "发展农田积累素食，通过素食存储打出高额伤害", cards: ["猪","鸡","水牛","梅花鹿","鹰","松鸦","松鼠","燕子"] }
+  chunhui: { name: "基本春晖体系1", desc: "发展农田积累素食，通过素食存储打出高额伤害", cards: ["猪","鸡","水牛","梅花鹿","鹰","松鸦","松鼠","老鼠"] },
+  chunhui2: { name: "基本春晖体系2", desc: "将春晖体系1中的鸡换成乌龟，虽然发展农田的速度减缓，但是增强了一定的生存能力", cards: ["鹰","猪","乌龟","水牛","老鼠","梅花鹿","松鸦","松鼠"] }
 };
 
 var ARCH_MAP = { "猛兽": "mengshou", "春晖": "chunhui", "乞巧": "qiqiao", "通用": "tongyong", "玄妙": "xuanmiao" };
@@ -3030,13 +3034,19 @@ function runLogicTests() {
   // === RESOURCE (19-23) ===
   var p3 = new Player("测资", false, 5000);
   p3.getResources();
-  ok(p3.vegetarian === 4 && p3.meat === 4 && p3.water === 4, "19 res gather Lv1: v=" + p3.vegetarian + " m=" + p3.meat + " w=" + p3.water);
+  ok(p3.vegetarian === 4 && p3.meat === 3 && p3.water === 4, "19 res gather Lv1: v=" + p3.vegetarian + " m=" + p3.meat + " w=" + p3.water);
   p3._veg = 1; p3._vegExp = 0; p3.vegetarian_level = 1;
   p3.vegetarian_exp = 10;
   ok(p3.vegetarian_level === 2, "20 res levelup: lv=" + p3.vegetarian_level + " exp=" + p3.vegetarian_exp);
   p3._vegExp = 0; p3.vegetarian_level = 1;
   p3.vegetarian_exp = 15;
   ok(p3.vegetarian_level === 2 && p3.vegetarian_exp === 5, "21 res overflow: lv=" + p3.vegetarian_level + " exp=" + p3.vegetarian_exp);
+  p3.vegetarian_level = 2; p3.vegetarian_exp = 0;
+  p3.vegetarian_exp = 100; // Lv2(20) + Lv3(40) + Lv4(40/60?)
+  // Actually: Lv2→3(20exp), Lv3→4(40exp), Lv4→5(60exp) = 120exp total to Lv5
+  // With 100exp: Lv2→Lv3(-20), Lv3→Lv4(-40) = 40exp left at Lv4 (need 60 to Lv5)
+  ok(p3.vegetarian_level === 4, "21b seq levelup lv: " + p3.vegetarian_level + " exp=" + p3.vegetarian_exp);
+  ok(p3.vegetarian_exp > 0 && p3.vegetarian_exp < 60, "21b seq levelup exp: " + p3.vegetarian_exp);
   p3.debuffs = [makeBuff("技能消耗+1", false, 1, "")];
   var ts = SKILL_DEFS["虎啸"](1, 1);
   ok(p3.isResEnough(ts) === false, "22 res costUp: enough=" + p3.isResEnough(ts));
@@ -3163,8 +3173,8 @@ function runLogicTests() {
   var tiredBuff = makeBuff("疲惫", false, 1, "", {damage:function(d){return Math.floor(d*0.1);}});
   ok(tiredBuff.damageBuffEffect(1000) === 100, "48 疲惫 dmg*0.1: " + tiredBuff.damageBuffEffect(1000));
 
-  var anjuBuff = makeBuff("安居", true, 1, "", {defendRate:function(r){return r+50;}});
-  ok(anjuBuff.defendRateBuffEffect(5) === 55, "49 安居 defendRate +50: " + anjuBuff.defendRateBuffEffect(5));
+  var anjuBuff = makeBuff("安居", true, 2, "", {defendRate:function(r){return r+30;}});
+  ok(anjuBuff.defendRateBuffEffect(5) === 35, "49 安居 defendRate +30: " + anjuBuff.defendRateBuffEffect(5));
 
   p3.vegIndicatorActive = true; p3.vegIndicator = 0;
   p3.consumeResourcesExact({vegCost:5, meatCost:0, waterCost:0});
@@ -3187,6 +3197,19 @@ function runLogicTests() {
 
   var slaughterDesc = lionCard.skills[lionCard.skills.length-1];
   ok(slaughterDesc.desc.indexOf("1") !== -1, "55 discard desc contains num: " + slaughterDesc.desc);
+
+  // === PRESET VALIDATION (56-57) ===
+  var qiqiaoPreset = PRESETS.qiqiao.cards;
+  var expectedQiqiao = ["老虎","猪","猎豹","乞巧族-猫长老","乞巧族-鼠力士","乞巧族-狐先知","乞巧族-月桂兔","乞巧族-金鱼圣女"];
+  ok(qiqiaoPreset.length === 8 && expectedQiqiao.every(function(c){return qiqiaoPreset.indexOf(c)!==-1;}), "56 qiqiao preset: " + qiqiaoPreset.join(","));
+
+  var chunhuiPreset = PRESETS.chunhui.cards;
+  var expectedChunhui = ["猪","鸡","水牛","梅花鹿","鹰","松鸦","松鼠","老鼠"];
+  ok(chunhuiPreset.length === 8 && expectedChunhui.every(function(c){return chunhuiPreset.indexOf(c)!==-1;}), "57 chunhui preset: " + chunhuiPreset.join(","));
+
+  var chunhui2Preset = PRESETS.chunhui2.cards;
+  var expectedChunhui2 = ["鹰","猪","乌龟","水牛","老鼠","梅花鹿","松鸦","松鼠"];
+  ok(chunhui2Preset.length === 8 && expectedChunhui2.every(function(c){return chunhui2Preset.indexOf(c)!==-1;}), "58 chunhui2 preset: " + chunhui2Preset.join(","));
 
   // --- restore ---
   try {
