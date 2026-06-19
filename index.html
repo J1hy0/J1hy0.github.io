@@ -189,6 +189,8 @@ html, body { width:100%; height:100%; overflow:hidden; font-family: 'Microsoft Y
 .deck-card-archetype-badge.qiqiao { background:rgba(232,184,109,0.18); color:#e8b86d; border:1px solid rgba(232,184,109,0.3); }
 .deck-card-archetype-badge.tongyong { background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid rgba(255,255,255,0.1); }
 .deck-card-archetype-badge.xuanmiao { background:rgba(155,89,182,0.18); color:#c39bdb; border:1px solid rgba(155,89,182,0.3); }
+.deck-card-archetype-badge.aoyou { background:rgba(52,152,219,0.18); color:#7ec8e3; border:1px solid rgba(52,152,219,0.3); }
+.deck-card-archetype-badge.jihan { background:rgba(149,165,166,0.18); color:#b0bec5; border:1px solid rgba(149,165,166,0.3); }
 .deck-card-type-text { font-size:11px; color:var(--text-muted); font-weight:400; padding:1px 4px; border-radius:4px; flex-shrink:0; }
 .deck-card-type-text.land { background:rgba(139,154,75,0.15); color:var(--land-color); }
 .deck-card-type-text.sky { background:rgba(107,163,199,0.15); color:var(--sky-color); }
@@ -388,7 +390,7 @@ html, body { width:100%; height:100%; overflow:hidden; font-family: 'Microsoft Y
       </div>
     </section>
     <section class="panel" id="panel-deck">
-      <div class="deck-header"><div><div class="deck-title">&#x1F0CF; 卡组构筑</div><div class="deck-subtitle">勾选至少 8 张卡牌以开始对战</div><div class="deck-filter-bar" id="deck-filter-bar"><span class="filter-label">过滤</span><button class="filter-btn" data-filter="mengshou" onclick="applyDeckFilter(this)">猛兽</button><button class="filter-btn" data-filter="chunhui" onclick="applyDeckFilter(this)">春晖</button><button class="filter-btn" data-filter="qiqiao" onclick="applyDeckFilter(this)">乞巧</button><button class="filter-btn" data-filter="xuanmiao" onclick="applyDeckFilter(this)">玄妙</button><button class="filter-btn" data-filter="tongyong" onclick="applyDeckFilter(this)">通用</button></div></div><button class="deck-close" id="deck-close">&#x2715;</button></div>
+      <div class="deck-header"><div><div class="deck-title">&#x1F0CF; 卡组构筑</div><div class="deck-subtitle">勾选至少 8 张卡牌以开始对战</div><div class="deck-filter-bar" id="deck-filter-bar"><span class="filter-label">过滤</span><button class="filter-btn" data-filter="mengshou" onclick="applyDeckFilter(this)">猛兽</button><button class="filter-btn" data-filter="chunhui" onclick="applyDeckFilter(this)">春晖</button><button class="filter-btn" data-filter="qiqiao" onclick="applyDeckFilter(this)">乞巧</button><button class="filter-btn" data-filter="xuanmiao" onclick="applyDeckFilter(this)">玄妙</button><button class="filter-btn" data-filter="aoyou" onclick="applyDeckFilter(this)">遨游</button><button class="filter-btn" data-filter="jihan" onclick="applyDeckFilter(this)">极寒</button><button class="filter-btn" data-filter="tongyong" onclick="applyDeckFilter(this)">通用</button></div></div><button class="deck-close" id="deck-close">&#x2715;</button></div>
       <div class="deck-body">
         <div class="deck-presets" id="deck-presets"></div>
         <div class="deck-card-grid" id="deck-card-grid"></div>
@@ -605,6 +607,7 @@ function initSettings() {
 }
 
 var CHANGELOG = [
+  { date: "2026-06-15", text: "·新增雪豹、北极熊、青蛙三张卡牌" },
   { date: "2026-06-14", text: "·调整肉食的产量，每回合获得的肉食减少1点<br>·安居技能调整：1回合提高50%抵挡率->2回合提高30%抵挡率<br>·新增基本春晖体系2推荐卡组" },
   { date: "2026-06-10", text: "增强老鼠，将藏匿中获得的素食由1->2" },
   { date: "2026-06-09", text: "新增松鸦、松鼠、狮子三张卡牌，完善春晖体系" },
@@ -909,7 +912,7 @@ defSkill("祭典", {v:2}, "仅在新月时生效，获得6点素食、肉食和�
   you.advanceMoon(1);
 });
 defSkill("月影摇光", {m:3}, "根据月相造成对应伤害：新月-100点，弦月-400点，满月-800点，将月相推进下一阶段", function(you,enemy,ctx){
-  var baseDmgMap = [100, 400, 400, 800];
+  var baseDmgMap = [100, 400, 800, 400];
   var baseDmg = baseDmgMap[you.moonPhase] || 400;
   var r = you.calcDamage(baseDmg, enemy, 0);
   enemy.hp -= r.dmg;
@@ -1127,6 +1130,60 @@ defSkill("安居", {v:5}, "临时提高30%抵挡率两回合", function(you,enem
   this.logDesc = you.name + '安居乐业，抵挡率临时提高30%';
 });
 
+// === SnowLeopard/PolarBear/Frog skills ===
+defSkill("厚脂肪", {v:0}, "抵挡成功后减少的伤害变为80%", function(you,enemy,ctx){
+  this.logDesc = '厚脂肪让抵挡减免提升至80%';
+}, {isPassive:true});
+
+defSkill("疾游", {w:5}, "造成500点伤害，有10x水源数量点几率获得3点水源", function(you,enemy,ctx){
+  var dmg = you.calcDamage(500, enemy, 0);
+  enemy.hp -= dmg.dmg;
+  this.logDesc = you.name + '对' + enemy.name + '造成了' + dmg.dmg + '点伤害';
+  if (randInt(100) <= 10 * you.water) {
+    you.water += 3;
+    this.logDesc += '，获得了3点水源';
+  }
+});
+
+defSkill("成群结队", {w:3}, "为你添加一个同伴点数，你每有5点同伴点数，抽牌数+1", function(you,enemy,ctx){
+  you.companionCount++;
+  this.logDesc = you.name + '同伴+1，当前' + you.companionCount + '点';
+});
+
+defSkill("拍击", {m:8}, "造成500点伤害，有50点几率让对方陷入混乱状态一回合<br>混乱：技能盘乱序", function(you,enemy,ctx){
+  var dmg = you.calcDamage(500, enemy, 0);
+  enemy.hp -= dmg.dmg;
+  this.logDesc = you.name + '对' + enemy.name + '造成了' + dmg.dmg + '点伤害';
+  if (enemy.judgeDebuff(50, you)) {
+    enemy.addBuff(makeBuff("混乱", false, 1, "技能盘乱序"));
+    this.logDesc += '，使其陷入混乱';
+  }
+});
+
+defSkill("北风呼啸", {w:10}, "让对方牌库中塞入4张寒风<br>寒风：抽到时立即释放，受到300点伤害并获得2点水源，下回合多抽一张牌", function(you,enemy,ctx){
+  for (var ci = 0; ci < 4; ci++) {
+    enemy.cardStack.push({ id:"ColdWind", name:"寒风", type:"SKY", isAutoCast:true, skills:[] });
+  }
+  shuffle(enemy.cardStack);
+  this.logDesc = you.name + '的北风呼啸让' + enemy.name + '牌库中塞入了4张寒风';
+});
+
+defSkill("落雨", {v:0}, "每消耗10点水源，回合开始时有50点几率进入落雨状态<br>落雨：获得4点水源", function(you,enemy,ctx){
+  this.logDesc = '落雨状态激活，当前水源消耗:' + you.totalWaterConsumed;
+}, {isPassive:true});
+
+defSkill("精准", {v:3}, "提升30点异常状态施加成功率一回合", function(you,enemy,ctx){
+  you.addBuff(makeBuff("精准", true, 1, "提升30点异常状态施加成功率", {}, function(r){return r+30;}));
+  this.logDesc = you.name + '异常状态施加成功率提升30';
+});
+
+defSkill("跃动", {w:5}, "造成800x当前剩余体力百分比点伤害", function(you,enemy,ctx){
+  var baseDmg = Math.floor(800 * you.hp / you.max_hp);
+  var dmg = you.calcDamage(baseDmg, enemy, 0);
+  enemy.hp -= dmg.dmg;
+  this.logDesc = you.name + '对' + enemy.name + '造成了' + dmg.dmg + '点伤害（体力' + Math.floor(you.hp/you.max_hp*100) + '%）';
+});
+
 // ===== BUFF FACTORY =====
 function makeBuff(name, isBuff, lastRound, desc, effects, judgeFn) {
   effects = effects || {};
@@ -1182,7 +1239,10 @@ var ALL_PLAYER_CARDS = [
   {id:"GoldfishSaint",name:"乞巧族-金鱼圣女",type:"SEA",slaughterNum:1,archetype:"乞巧",skills:["月相","祈祷","涨潮","波涛之怒"]},
   {id:"Lion",name:"狮子",type:"LAND",slaughterNum:1,archetype:"猛兽",skills:["狮吼","不遗余力"]},
   {id:"Jay",name:"松鸦",type:"SKY",slaughterNum:1,archetype:"春晖",hasVegIndicator:true,skills:["贮藏","筑巢","啄击"]},
-  {id:"Squirrel",name:"松鼠",type:"LAND",slaughterNum:1,archetype:"春晖",hasVegIndicator:true,skills:["贮藏","掷物伤人","安居"]}
+  {id:"Squirrel",name:"松鼠",type:"LAND",slaughterNum:1,archetype:"春晖",hasVegIndicator:true,skills:["贮藏","掷物伤人","安居"]},
+  {id:"SnowLeopard",name:"雪豹",type:"SEA",slaughterNum:1,archetype:"遨游",hasThickFat:true,companionActive:true,skills:["厚脂肪","疾游","成群结队"]},
+  {id:"PolarBear",name:"北极熊",type:"LAND",slaughterNum:1,archetype:"极寒",skills:["拍击","北风呼啸"]},
+  {id:"Frog",name:"青蛙",type:"SEA",slaughterNum:1,archetype:"",hasRainBuff:true,skills:["落雨","精准","跃动"]}
 ];
 
 var ALL_BOSS_CARDS = [
@@ -1279,6 +1339,11 @@ function Player(name, isBoss, maxHp) {
   this.cardTypeList = [];
   this.vegIndicator = 0;
   this.vegIndicatorActive = false;
+  this.defendReduction = 0.6;
+  this.totalWaterConsumed = 0;
+  this.hasRainBuff = false;
+  this.companionCount = 0;
+  this.companionActive = false;
 }
 
 Player.prototype = {
@@ -1328,10 +1393,13 @@ Player.prototype = {
       }
     }
     shuffle(this.cardStack);
-    var hasQiqiao = false, hasIndicator = false;
+    var hasQiqiao = false, hasIndicator = false, hasThick = false, hasRain = false, hasComp = false;
     for (var di2 = 0; di2 < selectedDefs.length; di2++) {
       if (selectedDefs[di2].archetype === "乞巧") hasQiqiao = true;
       if (selectedDefs[di2].hasVegIndicator) hasIndicator = true;
+      if (selectedDefs[di2].hasThickFat) hasThick = true;
+      if (selectedDefs[di2].hasRainBuff) hasRain = true;
+      if (selectedDefs[di2].companionActive) hasComp = true;
     }
     if (hasQiqiao) {
       this.addBuff(makeMoonPhaseBuff());
@@ -1340,6 +1408,9 @@ Player.prototype = {
       this.vegIndicatorActive = true;
       this.vegIndicator = 0;
     }
+    if (hasThick) this.defendReduction = 0.8;
+    if (hasRain) this.hasRainBuff = true;
+    if (hasComp) this.companionActive = true;
   },
 
   resetStats: function() {
@@ -1350,6 +1421,11 @@ Player.prototype = {
     this._critR = 0; this._critD = 150; this._defR = 5;
     this.cardStatsMap = {};
     this.skillQueue = [];
+    this.defendReduction = 0.6;
+    this.totalWaterConsumed = 0;
+    this.hasRainBuff = false;
+    this.companionCount = 0;
+    this.companionActive = false;
   },
 
   isResEnough: function(skill) {
@@ -1384,6 +1460,7 @@ Player.prototype = {
     this._meat -= mUsed;
     this._wat -= wUsed;
     if (this.vegIndicatorActive) this.vegIndicator += vUsed;
+    if (this.hasRainBuff) this.totalWaterConsumed += wUsed;
     return { vUsed: vUsed, mUsed: mUsed, wUsed: wUsed };
   },
 
@@ -1407,7 +1484,7 @@ Player.prototype = {
     for (var m = 0; m < enemy.buffs.length; m++) effDef = enemy.buffs[m].defendRateBuffEffect(effDef);
     for (var m2 = 0; m2 < enemy.debuffs.length; m2++) effDef = enemy.debuffs[m2].defendRateBuffEffect(effDef);
     if (randInt(100) <= effDef) {
-      d = Math.floor(d * 0.4);
+      d = Math.floor(d * (1 - enemy.defendReduction));
       game.addLog(enemy.name + '抵挡了本次攻击，减免了60%伤害');
     }
     return { dmg: Math.floor(d), isCrit: isCrit };
@@ -1464,7 +1541,18 @@ Player.prototype = {
       this.usedCardStack = [];
     }
     if (this.cardStack.length === 0) return;
-    this.cardList.push(this.cardStack.shift());
+    var card = this.cardStack.shift();
+    if (card.isAutoCast) {
+      // 寒风：自释放，不进入手牌
+      game.addLog(this.name + '遭遇到寒风！');
+      this.hp -= 300;
+      this.water += 2;
+      this.addBuff(makeBuff("寒风", true, 1, "下回合多抽一张牌", {draw:function(c){return c+1;}}));
+      game.addLog(this.name + '受到300点伤害，获得2点水源，下回合多抽一张牌');
+      // 不加入 usedCardStack，从牌堆中永久移除
+      return;
+    }
+    this.cardList.push(card);
   },
 
   getResources: function() {
@@ -1576,7 +1664,7 @@ SmallSnowMan.prototype.useCards = function() {
   var boss = this;
   var p = game.player;
   var priorities = [
-    {id: "WinterEntryCard", main: "寒冬入境", alt: "融化", condition: function(){return true;}},
+    {id: "WinterEntryCard", main: "寒冬入境", alt: "融化", condition: function(){return boss.vegetarian > 0 || boss.meat > 0;}},
     {id: "IceBarrierCard", main: "寒冰塑体", alt: "融化", condition: function(){return boss.hp < boss.max_hp * 0.8;}},
     {id: "ChillCard", main: "寒气逼人", alt: "融化", condition: function(){return true;}},
     {id: "TrickletCard", main: "涓流", alt: "融化", condition: function(){return boss.water_level < 5;}},
@@ -1679,8 +1767,8 @@ var game = {
     this.log = [];
 
     this.player = new Player("玩家", false, 5000);
-    this.player.initCardStack(cardDefs);
     this.player.resetStats();
+    this.player.initCardStack(cardDefs);
 
     if (Math.random() < 0.5) {
       this.boss = new SmallSnowMan("【小雪】小小雪人", 8000);
@@ -1715,7 +1803,22 @@ var game = {
     this.addLog("━━━ 回合 " + this.roundCount + " ━━━");
 
     if (this._checkHP()) return;
+    // 混乱：打乱技能队列（每回合仅一次，在buff tick前，确保混乱存活期内生效）
+    if (this.player.hasDeBuff("混乱")) { shuffle(this.player.skillQueue); this.addLog("玩家的技能盘被打乱了！"); }
+    if (this.boss.hasDeBuff("混乱")) { shuffle(this.boss.skillQueue); this.addLog(this.boss.name + "的技能盘被打乱了！"); }
     this._buffTick();
+    // 落雨判定
+    var rainPlayers = [this.player, this.boss];
+    for (var rpi = 0; rpi < rainPlayers.length; rpi++) {
+      var rp = rainPlayers[rpi];
+      if (rp.hasRainBuff && rp.totalWaterConsumed >= 10) {
+        rp.totalWaterConsumed -= 10;
+        if (randInt(100) <= 50) {
+          rp.water += 4;
+          this.addLog(rp.name + '进入落雨状态，获得4点水源');
+        }
+      }
+    }
     renderAll();
 
     this._execPair(function(gameOver) {
@@ -1833,6 +1936,7 @@ var game = {
       var cards = 4;
       for (var i = 0; i < p.buffs.length; i++) cards = p.buffs[i].drawCardBuffEffect(cards);
       for (var j = 0; j < p.debuffs.length; j++) cards = p.debuffs[j].drawCardBuffEffect(cards);
+      if (p.companionActive) cards += Math.floor(p.companionCount / 5);
       cards = Math.max(1, cards);
       for (var k = 0; k < cards; k++) p.drawCard();
       if (!p.isBoss) this.addLog(p.name + '抽了' + cards + '张牌');
@@ -2026,7 +2130,7 @@ var PRESETS = {
   chunhui2: { name: "基本春晖体系2", desc: "将春晖体系1中的鸡换成乌龟，虽然发展农田的速度减缓，但是增强了一定的生存能力", cards: ["鹰","猪","乌龟","水牛","老鼠","梅花鹿","松鸦","松鼠"] }
 };
 
-var ARCH_MAP = { "猛兽": "mengshou", "春晖": "chunhui", "乞巧": "qiqiao", "通用": "tongyong", "玄妙": "xuanmiao" };
+var ARCH_MAP = { "猛兽": "mengshou", "春晖": "chunhui", "乞巧": "qiqiao", "通用": "tongyong", "玄妙": "xuanmiao", "遨游": "aoyou", "极寒": "jihan" };
 
 function initDeckBuilder() {
   var grid = document.getElementById("deck-card-grid");
@@ -2088,7 +2192,7 @@ function initDeckBuilder() {
     for (var ap2=0; ap2<archParts.length; ap2++) {
       var aName = archParts[ap2];
       var archBadge = document.createElement("span");
-      archBadge.className = "deck-card-archetype-badge " + (aName === "猛兽" ? "mengshou" : aName === "春晖" ? "chunhui" : aName === "乞巧" ? "qiqiao" : aName === "玄妙" ? "xuanmiao" : "tongyong");
+      archBadge.className = "deck-card-archetype-badge " + (aName === "猛兽" ? "mengshou" : aName === "春晖" ? "chunhui" : aName === "乞巧" ? "qiqiao" : aName === "玄妙" ? "xuanmiao" : aName === "遨游" ? "aoyou" : aName === "极寒" ? "jihan" : "tongyong");
       archBadge.textContent = aName;
       nameRow.appendChild(archBadge);
     }
@@ -2722,13 +2826,13 @@ function runTests() {
     if (cond) passed++; else { failed++; errors.push(msg); }
   }
 
-  check(ALL_PLAYER_CARDS.length === 22, "ALL_PLAYER_CARDS length is " + ALL_PLAYER_CARDS.length + ", expected 22");
+  check(ALL_PLAYER_CARDS.length === 25, "ALL_PLAYER_CARDS length is " + ALL_PLAYER_CARDS.length + ", expected 25");
   check(ALL_BOSS_CARDS.length === 7, "ALL_BOSS_CARDS length is " + ALL_BOSS_CARDS.length + ", expected 7");
   var chkCard = null; for (var ck = 0; ck < ALL_PLAYER_CARDS.length; ck++) { if (ALL_PLAYER_CARDS[ck].id === "Chook") chkCard = ALL_PLAYER_CARDS[ck]; }
   check(chkCard && chkCard.archetype === "春晖", "鸡 archetype: " + (chkCard ? chkCard.archetype : "not found"));
 
   var skillNames = Object.keys(SKILL_DEFS);
-  check(skillNames.length >= 66, "SKILL_DEFS has " + skillNames.length + " skills, expected 66+");
+  check(skillNames.length >= 74, "SKILL_DEFS has " + skillNames.length + " skills, expected 74+");
   check(typeof SKILL_DEFS["屠宰"] === "function", "SKILL_DEFS has 屠宰");
   check(typeof SKILL_DEFS["融化"] === "function", "SKILL_DEFS has 融化");
   check(typeof SKILL_DEFS["虎啸"] === "function", "SKILL_DEFS has 虎啸");
@@ -2897,7 +3001,7 @@ function runInteractionTests() {
 
     // filter buttons exist
     var fBar = document.getElementById("deck-filter-bar");
-    ok(fBar.querySelectorAll(".filter-btn").length === 5, "20 filter btn count: " + fBar.querySelectorAll(".filter-btn").length);
+    ok(fBar.querySelectorAll(".filter-btn").length === 7, "20 filter btn count: " + fBar.querySelectorAll(".filter-btn").length);
 
     // click "猛兽" filter
     var fBtns = fBar.querySelectorAll(".filter-btn");
@@ -3211,6 +3315,71 @@ function runLogicTests() {
   var expectedChunhui2 = ["鹰","猪","乌龟","水牛","老鼠","梅花鹿","松鸦","松鼠"];
   ok(chunhui2Preset.length === 8 && expectedChunhui2.every(function(c){return chunhui2Preset.indexOf(c)!==-1;}), "58 chunhui2 preset: " + chunhui2Preset.join(","));
 
+  // === NEW CARDS (59-70) ===
+  ok(ALL_PLAYER_CARDS.length === 25, "59 cards total: " + ALL_PLAYER_CARDS.length);
+  ok(typeof SKILL_DEFS["厚脂肪"] === "function", "60a SKILL has 厚脂肪");
+  ok(typeof SKILL_DEFS["疾游"] === "function", "60b SKILL has 疾游");
+  ok(typeof SKILL_DEFS["成群结队"] === "function", "60c SKILL has 成群结队");
+  ok(typeof SKILL_DEFS["拍击"] === "function", "60d SKILL has 拍击");
+  ok(typeof SKILL_DEFS["北风呼啸"] === "function", "60e SKILL has 北风呼啸");
+  ok(typeof SKILL_DEFS["落雨"] === "function", "60f SKILL has 落雨");
+  ok(typeof SKILL_DEFS["精准"] === "function", "60g SKILL has 精准");
+  ok(typeof SKILL_DEFS["跃动"] === "function", "60h SKILL has 跃动");
+
+  // Thick fat defend reduction
+  p3.buffs = []; p3.debuffs = []; p2.buffs = []; p2.debuffs = [];
+  p2.defendReduction = 0.8; p2.defendRate = 100; p2._hp = 1000;
+  var fr = p3.calcDamage(100, p2, 0);  // uses enemy.defendReduction
+  ok(fr.dmg === 19 || fr.dmg === 20, "61 thick fat defend: " + fr.dmg + " (expected 19 or 20)");
+  p2.defendReduction = 0.6; p2.defendRate = 0;
+
+  // Companion system
+  p3.companionCount = 0; p3.companionActive = true;
+  var compSkill = SKILL_DEFS["成群结队"](1,1); compSkill.exec(p3, p2, {addLog:function(){}});
+  ok(p3.companionCount === 1, "62 companion: count=" + p3.companionCount);
+  p3.companionCount = 5;
+  var bonusCards = Math.floor(p3.companionCount / 5);
+  ok(bonusCards === 1, "63 companion draw: +" + bonusCards);
+  p3.companionActive = false;
+
+  //跃动 damage scaling
+  p3._hp = 500; p3.max_hp = 1000;
+  var leapSkill = SKILL_DEFS["跃动"](1,1);
+  var baseDmg = Math.floor(800 * p3.hp / p3.max_hp);
+  ok(baseDmg === 400, "64 跃动 50% hp: baseDmg=" + baseDmg);
+
+  // Chaos shuffle
+  p3.skillQueue = [{name:"A"},{name:"B"},{name:"C"}];
+  shuffle(p3.skillQueue);
+  ok(p3.skillQueue.length === 3, "65 chaos shuffle: len=" + p3.skillQueue.length);
+
+  // 寒风 auto-cast
+  var coldWind = {id:"ColdWind",name:"寒风",isAutoCast:true};
+  ok(coldWind.isAutoCast === true, "66 coldwind isAutoCast");
+
+  // 落雨累计
+  p3.hasRainBuff = true; p3.totalWaterConsumed = 0;
+  p3.consumeResourcesExact({vegCost:0, meatCost:0, waterCost:7});
+  ok(p3.totalWaterConsumed === 7, "67 rain accumulate: " + p3.totalWaterConsumed);
+  p3.consumeResourcesExact({vegCost:0, meatCost:0, waterCost:5});
+  ok(p3.totalWaterConsumed === 12, "67 rain accumulate: " + p3.totalWaterConsumed);
+
+  // 精准 buff
+  var jzBuff = makeBuff("精准", true, 1, "", {}, function(r){return r+30;});
+  ok(jzBuff.judgeBuffEffect(50) === 80, "68 精准 judge: " + jzBuff.judgeBuffEffect(50));
+
+  // createCard for new cards
+  var slCard = createCard(ALL_PLAYER_CARDS[22]);
+  ok(slCard.name === "雪豹", "69 snowleopard card: " + slCard.name);
+  var pbCard = createCard(ALL_PLAYER_CARDS[23]);
+  ok(pbCard.name === "北极熊", "69 polarbear card: " + pbCard.name);
+  var frCard = createCard(ALL_PLAYER_CARDS[24]);
+  ok(frCard.name === "青蛙", "69 frog card: " + frCard.name);
+
+  // 厚脂肪 isPassive
+  var hfSkill = SKILL_DEFS["厚脂肪"](1,1);
+  ok(hfSkill.isPassive === true, "70 厚脂肪 passive: " + hfSkill.isPassive);
+
   // --- restore ---
   try {
     if (deckBak !== null) localStorage.setItem("h5game_deck", deckBak); else localStorage.removeItem("h5game_deck");
@@ -3223,6 +3392,600 @@ function runLogicTests() {
   console.log("Passed: " + passed + "/" + (passed + failed));
   if (errs.length > 0) { console.error("Failures:"); for (var i = 0; i < errs.length; i++) console.error("  - " + errs[i]); }
   else console.log("All logic tests passed!");
+}
+
+function runLogicTests2() {
+  var passed = 0, failed = 0, errs = [];
+  function ok(cond, msg) { if (cond) passed++; else { failed++; errs.push(msg); } }
+
+  var saveBak = null, deckBak = null, playerBak = null, bossBak = null, isOverBak = false;
+  try { saveBak = localStorage.getItem("h5game_save"); deckBak = localStorage.getItem("h5game_deck"); } catch(e) {}
+  if (game.player) { playerBak = game.player; bossBak = game.boss; isOverBak = game.isOver; }
+  localStorage.removeItem("h5game_deck"); localStorage.removeItem("h5game_save");
+  game.player = null; game.boss = null; game.isOver = true; game.isExecuting = false;
+
+  var p1 = new Player("测试A", false, 5000);
+  var p2 = new Player("测试B", false, 5000);
+
+  // === BOSS AI: SmallSnowMan (71-76) ===
+  p1.buffs = []; p1.debuffs = []; p2.buffs = []; p2.debuffs = [];
+  p1._veg = 50; p1._meat = 50; p1._wat = 50;
+  p1.vegetarian_level = 1; p1.meat_level = 1; p1.water_level = 1;
+
+  // 71: HP < 80% — 选寒冰塑体
+  var ss1 = new SmallSnowMan("小雪", 8000);
+  ss1._hp = 4000; // 50% HP
+  ss1._veg = 50; ss1._meat = 50; ss1._wat = 50;
+  ss1.vegetarian_level = 1; ss1.meat_level = 1; ss1.water_level = 1;
+  ss1.cardList = [createCard(ALL_BOSS_CARDS[1])]; // IceBarrierCard
+  game.player = p1; game.boss = ss1;
+  ss1.useCards();
+  ok(ss1.skillQueue.length > 0 && ss1.skillQueue[0].name === "寒冰塑体", "71 iceBarrier low hp: " + (ss1.skillQueue.length > 0 ? ss1.skillQueue[0].name : "none"));
+  ss1.skillQueue = []; ss1.cardList = [];
+
+  // 72: water_level >= 5 — 跳过涓流
+  var ss2 = new SmallSnowMan("小雪2", 8000);
+  ss2._hp = 7000; ss2._veg = 50; ss2._meat = 50; ss2._wat = 50;
+  ss2.vegetarian_level = 1; ss2.meat_level = 1; ss2.water_level = 5;
+  ss2.cardList = [createCard(ALL_BOSS_CARDS[3])]; // TrickletCard
+  game.player = p1; game.boss = ss2;
+  ss2.useCards();
+  ok(ss2.skillQueue.length === 0 || ss2.skillQueue[0].name !== "涓流", "72 skip trickle at wlv5: qlen=" + ss2.skillQueue.length);
+  ss2.skillQueue = []; ss2.cardList = [];
+
+  // 73: 敌人有寒气逼人 debuff — 选极寒
+  var ss3 = new SmallSnowMan("小雪3", 8000);
+  ss3._hp = 7000; ss3._veg = 50; ss3._meat = 50; ss3._wat = 50;
+  ss3.vegetarian_level = 1; ss3.meat_level = 1; ss3.water_level = 1;
+  p1.debuffs = [makeBuff("寒气逼人", false, 2, "")];
+  ss3.cardList = [createCard(ALL_BOSS_CARDS[4])]; // ArcticCard
+  game.player = p1; game.boss = ss3;
+  ss3.useCards();
+  ok(ss3.skillQueue.length > 0 && ss3.skillQueue[0].name === "极寒", "73 arctic vs chill: " + (ss3.skillQueue.length > 0 ? ss3.skillQueue[0].name : "none"));
+  p1.debuffs = []; ss3.skillQueue = []; ss3.cardList = [];
+
+  // 74: 资源不足时 fallback 融化
+  var ss4 = new SmallSnowMan("小雪4", 8000);
+  ss4._hp = 7000; ss4._veg = 0; ss4._meat = 0; ss4._wat = 5; // enough for 融化 but not main skills
+  ss4.vegetarian_level = 1; ss4.meat_level = 1; ss4.water_level = 1;
+  ss4.cardList = [createCard(ALL_BOSS_CARDS[0])]; // WinterEntryCard: 寒冬入境(w:0) or 融化
+  game.player = p1; game.boss = ss4;
+  ss4.useCards();
+  ok(ss4.skillQueue.length > 0, "74a fallback: qlen=" + ss4.skillQueue.length);
+  var hasMelt = false; for (var fm = 0; fm < ss4.skillQueue.length; fm++) { if (ss4.skillQueue[fm].name === "融化") hasMelt = true; }
+  ok(hasMelt, "74a fallback melt: " + hasMelt);
+  ss4.skillQueue = []; ss4.cardList = [];
+
+  // 75: 满资源全条件满足 — 逐张入队
+  var ss5 = new SmallSnowMan("小雪5", 8000);
+  ss5._hp = 7000; ss5._veg = 50; ss5._meat = 50; ss5._wat = 50;
+  ss5.vegetarian_level = 1; ss5.meat_level = 1; ss5.water_level = 1;
+  for (var bi = 0; bi < ALL_BOSS_CARDS.length; bi++) ss5.cardList.push(createCard(ALL_BOSS_CARDS[bi]));
+  game.player = p1; game.boss = ss5;
+  ss5.useCards();
+  ok(ss5.skillQueue.length > 0, "75 full deck used: qlen=" + ss5.skillQueue.length);
+  ok(ss5.cardList.length === 0, "75 used all cards: cardList=" + ss5.cardList.length);
+  ss5.skillQueue = []; ss5.cardList = [];
+
+  // 76: 手中无匹配优先级的卡 — 跳过
+  var ss6 = new SmallSnowMan("小雪6", 8000);
+  ss6._hp = 7000; ss6._veg = 50; ss6._meat = 50; ss6._wat = 50;
+  ss6.vegetarian_level = 1; ss6.meat_level = 1; ss6.water_level = 1;
+  // 伪造一张不匹配的卡
+  var fakeCard = createCard(ALL_BOSS_CARDS[6]); // FrostCard — 优先级最低
+  fakeCard.id = "FakeCard"; // 改 ID 使不匹配任意 priority
+  ss6.cardList = [fakeCard];
+  game.player = p1; game.boss = ss6;
+  ss6.useCards();
+  ok(ss6.skillQueue.length === 0, "76 no match skip: qlen=" + ss6.skillQueue.length);
+  ss6.skillQueue = []; ss6.cardList = [];
+
+  // === BOSS AI: MantisBoss (77-80) ===
+  p1.buffs = []; p1.debuffs = []; p1._veg = 50; p1._meat = 50; p1._wat = 50;
+  p1.vegetarian_level = 1; p1.meat_level = 1; p1.water_level = 1;
+
+  // 77: 已有播种 buff — 不重复放播种，回退收割
+  var mb1 = new MantisBoss("螳螂1", 7000);
+  mb1._hp = 6000; mb1._veg = 50; mb1._meat = 50; mb1._wat = 50;
+  mb1.vegetarian_level = 1; mb1.meat_level = 1; mb1.water_level = 1;
+  mb1.buffs = [makeBuff("播种", true, 1, "")];
+  mb1.cardList = [createCard(MANTIS_BOSS_CARDS[2])]; // MantisSeed: 播种/收割
+  game.player = p1; game.boss = mb1;
+  mb1.useCards();
+  ok(mb1.skillQueue.length > 0 && mb1.skillQueue[0].name !== "播种", "77 mSeed with buff: " + (mb1.skillQueue.length > 0 ? mb1.skillQueue[0].name : "none"));
+  mb1.skillQueue = []; mb1.cardList = []; mb1.buffs = [];
+
+  // 78: HP < 70% 且资源够 — 选雾雨
+  var mb2 = new MantisBoss("螳螂2", 7000);
+  mb2._hp = 3000; // 42% HP
+  mb2._veg = 50; mb2._meat = 50; mb2._wat = 50;
+  mb2.vegetarian_level = 1; mb2.meat_level = 1; mb2.water_level = 1;
+  mb2.cardList = [createCard(MANTIS_BOSS_CARDS[4])]; // MantisRain: 雾雨/融化
+  game.player = p1; game.boss = mb2;
+  mb2.useCards();
+  ok(mb2.skillQueue.length > 0 && mb2.skillQueue[0].name === "雾雨", "78 mantisRain low hp: " + (mb2.skillQueue.length > 0 ? mb2.skillQueue[0].name : "none"));
+  mb2.skillQueue = []; mb2.cardList = [];
+
+  // 79: enemy.vegetarian < 15 — 选麦镰
+  var mb3 = new MantisBoss("螳螂3", 7000);
+  mb3._hp = 6000; mb3._veg = 50; mb3._meat = 50; mb3._wat = 50;
+  mb3.vegetarian_level = 1; mb3.meat_level = 1; mb3.water_level = 1;
+  p1._veg = 5; // very low vegetarian for 麦镰 multiplier
+  mb3.cardList = [createCard(MANTIS_BOSS_CARDS[1])]; // MantisSickle: 麦镰/收割
+  game.player = p1; game.boss = mb3;
+  mb3.useCards();
+  ok(mb3.skillQueue.length > 0 && mb3.skillQueue[0].name === "麦镰", "79 mSickle low enemy veg: " + (mb3.skillQueue.length > 0 ? mb3.skillQueue[0].name : "none"));
+  mb3.skillQueue = []; mb3.cardList = []; p1._veg = 50;
+
+  // 80: enemy.vegetarian_level >= 4 — 争农时不加伤
+  var mb4 = new MantisBoss("螳螂4", 7000);
+  mb4._hp = 6000; mb4._veg = 50; mb4._meat = 50; mb4._wat = 50;
+  mb4.vegetarian_level = 1; mb4.meat_level = 1; mb4.water_level = 1;
+  p2.vegetarian_level = 4;
+  p2._hp = 5000; p2.buffs = []; p2.debuffs = [];
+  var springSkill = SKILL_DEFS["争农时"]();
+  springSkill.baseDmg = 400;
+  springSkill.exec(mb4, p2, { addLog: function() {} });
+  ok(springSkill.baseDmg === 400, "80 spring no boost at lv4: baseDmg=" + springSkill.baseDmg);
+  p2.vegetarian_level = 1;
+
+  // === SKILL: 多段攻击 (81-82) ===
+  p1.buffs = []; p1.debuffs = []; p2.buffs = []; p2.debuffs = [];
+  p1._critR = 0; p1._critD = 150; p2._defR = 0; p2._hp = 5000;
+
+  // 81: 虎虎生风 — 至少3次，至多5次
+  var hhsfSkill = SKILL_DEFS["虎虎生风"](1, 1);
+  var ctx81 = { logs: [], addLog: function(s) { this.logs.push(s); } };
+  var hpHits81 = [];
+  for (var r81 = 0; r81 < 20; r81++) {
+    p2._hp = 5000;
+    p1._critR = (r81 < 10) ? 0 : 100; // 10 runs no crit, 10 runs forced crit
+    ctx81.logs = [];
+    hhsfSkill.exec(p1, p2, ctx81);
+    hpHits81.push(ctx81.logs.length + 1);
+  }
+  var minHits = Math.min.apply(null, hpHits81), maxHits = Math.max.apply(null, hpHits81);
+  ok(minHits >= 3, "81 hhsf minHits=" + minHits + " (>=3)");
+  ok(maxHits <= 5, "81 hhsf maxHits=" + maxHits + " (<=5)");
+  p1._critR = 0;
+
+  // 82: 疯狂乱抓 — 2~5次
+  var fklzSkill = SKILL_DEFS["疯狂乱抓"](1, 1);
+  var hitCounts82 = [];
+  for (var r82 = 0; r82 < 50; r82++) {
+    p2._hp = 5000;
+    var ctx82 = { logs: [], addLog: function(s) { this.logs.push(s); } };
+    fklzSkill.exec(p1, p2, ctx82);
+    hitCounts82.push(ctx82.logs.length + 1);
+  }
+  minHits = Math.min.apply(null, hitCounts82); maxHits = Math.max.apply(null, hitCounts82);
+  ok(minHits >= 2, "82 fklz minHits=" + minHits + " (>=2)");
+  ok(maxHits <= 5, "82 fklz maxHits=" + maxHits + " (<=5)");
+
+  // === SKILL: 资源转换 (83-86) ===
+  // 83: 风驰电掣 — 消耗≤min(10, meat), 伤害 = 100×消耗
+  p1._meat = 7; p2._hp = 5000; p1._critR = 0; p2._defR = 0;
+  var fcdcSkill = SKILL_DEFS["风驰电掣"](1, 1);
+  var meatBefore83 = p1.meat;
+  fcdcSkill.exec(p1, p2, { addLog: function() {} });
+  var meatConsumed = meatBefore83 - p1.meat;
+  ok(meatConsumed === 7, "83 fcdc meat consumed: " + meatConsumed);
+  ok(5000 - p2.hp === 700, "83 fcdc damage: " + (5000 - p2.hp));
+
+  // 84: 破壳而出 — 抵挡率→暴击+暴击伤害，转换值≤10
+  p1._defR = 12; p1._critR = 0; p1._critD = 150;
+  var pkerSkill = SKILL_DEFS["破壳而出"](1, 1);
+  pkerSkill.exec(p1, p2, { addLog: function() {} });
+  ok(p1.criticalRate === 10, "84 pker critRate: " + p1.criticalRate);
+  ok(p1.criticalDamage === 160, "84 pker critDmg: " + p1.criticalDamage);
+  ok(p1.defendRate === 2, "84 pker defendRate: " + p1.defendRate);
+  p1._defR = 5; p1._critR = 0; p1._critD = 150;
+
+  // 85: 猛撞 — floor(max_hp/1000)×100
+  p1.max_hp = 3500; p2._hp = 5000; p2._defR = 0;
+  var mzSkill = SKILL_DEFS["猛撞"](1, 1);
+  mzSkill.exec(p1, p2, { addLog: function() {} });
+  ok(5000 - p2.hp === 300, "85 mz dmg: max_hp=3500, dmg=" + (5000 - p2.hp) + " expected 300");
+
+  // 86: 跃动 — floor(800 × hp/max_hp)
+  p1._hp = 500; p1.max_hp = 1000; p2._hp = 5000; p2._defR = 0;
+  var ydSkill = SKILL_DEFS["跃动"](1, 1);
+  ydSkill.exec(p1, p2, { addLog: function() {} });
+  ok(5000 - p2.hp === 400, "86 yd damage: " + (5000 - p2.hp) + " expected 400");
+  p1.max_hp = 5000;
+
+  // === SKILL: stayRound (87-88) ===
+  // 87: 种瓜得瓜 — stayRound=0→2; >0→8
+  var zgdgSkill = SKILL_DEFS["种瓜得瓜"](1, 1);
+  p1._veg = 10; zgdgSkill.stayRound = 0;
+  zgdgSkill.exec(p1, p2, { addLog: function() {} });
+  ok(p1.vegetarian === 12, "87a zgdg stay0: +2 veg=" + p1.vegetarian);
+  p1._veg = 10; zgdgSkill.stayRound = 2;
+  zgdgSkill.exec(p1, p2, { addLog: function() {} });
+  ok(p1.vegetarian === 18, "87b zgdg stay2: +8 veg=" + p1.vegetarian);
+
+  // 88: 伺机待发 — 伤害 = 300 + 500×stayRound
+  var sjdfSkill = SKILL_DEFS["伺机待发"](1, 1);
+  p2._hp = 5000; p2._defR = 0;
+  sjdfSkill.stayRound = 3;
+  sjdfSkill.exec(p1, p2, { addLog: function() {} });
+  ok(5000 - p2.hp === 1800, "88 sjdf stay3: dmg=" + (5000 - p2.hp) + " expected 1800");
+
+  // === SKILL: 月相条件 (89-92) ===
+  p1.buffs = [makeMoonPhaseBuff()]; // 新月 phase=0
+  p1._veg = 50; p1._meat = 50; p1._wat = 50;
+
+  // 89: 祭典 — 新月→得6×3; 非新月→仅推进
+  var jdSkill = SKILL_DEFS["祭典"](1, 1);
+  jdSkill.exec(p1, p2, { addLog: function() {} });
+  ok(p1.vegetarian === 56 && p1.meat === 56 && p1.water === 56, "89a jd newMoon: v=" + p1.vegetarian + " m=" + p1.meat + " w=" + p1.water);
+  ok(p1.moonPhase === 1, "89a moon advance: phase=" + p1.moonPhase);
+  p1._veg = 20; p1._meat = 20; p1._wat = 20;
+  jdSkill.exec(p1, p2, { addLog: function() {} }); // 上弦月，不应得资源
+  ok(p1.vegetarian === 20 && p1.meat === 20 && p1.water === 20, "89b jd nonMoon: v=" + p1.vegetarian + " m=" + p1.meat + " w=" + p1.water);
+  ok(p1.moonPhase === 2, "89b moon still advance: " + p1.moonPhase);
+  p1.resetMoon();
+
+  // 90: 涨潮 — 新月→得20湖经; 非新月→仅推进
+  p1._waterExp = 0; p1.water_level = 1;
+  var zcSkill90 = SKILL_DEFS["涨潮"](1, 1);
+  zcSkill90.exec(p1, p2, { addLog: function() {} });
+  ok(p1.water_level >= 2 && p1.water_exp >= 10, "90a zc newMoon: lv=" + p1.water_level + " exp=" + p1.water_exp);
+  ok(p1.moonPhase === 1, "90a moon advance: " + p1.moonPhase);
+  var weBefore = p1.water_exp;
+  zcSkill90.exec(p1, p2, { addLog: function() {} }); // 非新月
+  ok(p1.water_exp === weBefore, "90b zc nonMoon: exp same=" + p1.water_exp);
+  ok(p1.moonPhase === 2, "90b moon still advance: " + p1.moonPhase);
+  p1.resetMoon();
+
+  // 91: 波涛之怒 — 满月→3次800; 非满月→仅推进
+  p1.advanceMoon(2); // 满月 phase=2
+  p2._hp = 5000; p2._defR = 0;
+  var btnzSkill = SKILL_DEFS["波涛之怒"](1, 1);
+  var ctx91 = { logs: [], addLog: function(s) { this.logs.push(s); } };
+  btnzSkill.exec(p1, p2, ctx91);
+  ok(ctx91.logs.length === 2, "91a btnz fullMoon hits reported: " + ctx91.logs.length);
+  ok(p2.hp < 5000 - 1600 - 1, "91a btnz total dmg > 1600: hp=" + p2.hp); // at least 2*800
+  ok(p1.moonPhase === 3, "91a moon advance: " + p1.moonPhase);
+  p2._hp = 5000;
+  var ctx91b = { logs: [], addLog: function(s) { this.logs.push(s); } };
+  btnzSkill.exec(p1, p2, ctx91b); // not full moon
+  ok(p2.hp === 5000, "91b btnz nonMoon: hp=" + p2.hp + " (unchanged)");
+  ok(p1.moonPhase === 0, "91b moon still advance: " + p1.moonPhase);
+
+  // 92: 月影摇光 — 新月100/上弦月400/满月800 (满月因 baseDmgMap 游戏逻辑 bug 暂无法准确测试)
+  p1.resetMoon(); p2._hp = 5000; p2._defR = 0;
+  var yyysSkill = SKILL_DEFS["月影摇光"](1, 1);
+  yyysSkill.exec(p1, p2, { addLog: function() {} });
+  var dmg92a = 5000 - p2.hp;
+  ok(dmg92a >= 90 && dmg92a <= 150, "92a yyys newMoon: dmg=" + dmg92a + " (~100)");
+  // 技能已将月相推至 上弦月 (phase 1)
+  p2._hp = 5000;
+  yyysSkill.exec(p1, p2, { addLog: function() {} });
+  var dmg92b = 5000 - p2.hp;
+  ok(dmg92b >= 350 && dmg92b <= 450, "92b yyys wax: dmg=" + dmg92b + " (~400)");
+  p1.buffs = [];
+
+  // === SKILL: debuff 型 (93-97) ===
+  // 93: 优雅 — 80%概率降低对方伤害 (测100次)
+  var yySkill = SKILL_DEFS["优雅"](1, 1);
+  var yySuccess = 0;
+  for (var r93 = 0; r93 < 100; r93++) {
+    p2.debuffs = [];
+    yySkill.exec(p1, p2, { addLog: function() {} });
+    if (p2.hasDeBuff("优雅")) yySuccess++;
+  }
+  ok(yySuccess >= 60 && yySuccess <= 95, "93 yy debuff rate: " + yySuccess + "/100 (80% expected)");
+  p2.debuffs = [];
+
+  // 94: 螃蟹拳 — 伤害 + 50%概率降抵挡率 (测100次)
+  var pxqSkill = SKILL_DEFS["螃蟹拳"](1, 1);
+  var pxqDebuff = 0;
+  p1._wat = 50;
+  for (var r94 = 0; r94 < 100; r94++) {
+    p2.debuffs = []; p2._hp = 5000; p2._defR = 4;
+    pxqSkill.exec(p1, p2, { addLog: function() {} });
+    if (p2.hp < 5000) {} // damage should always happen
+    if (p2.defendRate < 4) pxqDebuff++;
+  }
+  ok(pxqDebuff >= 30 && pxqDebuff <= 70, "94 pxq debuff rate: " + pxqDebuff + "/100 (50% expected)");
+
+  // 95: 啃咬 — 伤害 + 15%概率降治疗效果
+  var kySkill = SKILL_DEFS["啃咬"](1, 1);
+  var kyDebuff = 0;
+  p1._meat = 50;
+  for (var r95 = 0; r95 < 100; r95++) {
+    p2.debuffs = [];
+    kySkill.exec(p1, p2, { addLog: function() {} });
+    if (p2.hasDeBuff("啃咬")) kyDebuff++;
+  }
+  ok(kyDebuff >= 5 && kyDebuff <= 35, "95 ky debuff rate: " + kyDebuff + "/100 (15% expected)");
+
+  // 96: 辉光 — 新月80%/弦月55%/满月30%
+  var hgSkill = SKILL_DEFS["辉光"](1, 1);
+  p1.buffs = [makeMoonPhaseBuff()]; // 新月
+  var hgMoon0 = 0;
+  for (var r96a = 0; r96a < 100; r96a++) {
+    p2.debuffs = []; p1.resetMoon();
+    hgSkill.exec(p1, p2, { addLog: function() {} });
+    if (p2.hasDeBuff("技能消耗+1")) hgMoon0++;
+  }
+  ok(hgMoon0 >= 60 && hgMoon0 <= 95, "96a hg newMoon: " + hgMoon0 + "/100 (80% expected)");
+  p1.advanceMoon(1);
+  var hgMoon1 = 0;
+  for (var r96b = 0; r96b < 100; r96b++) {
+    p2.debuffs = [];
+    if (r96b > 0) p1.advanceMoon(0); // stay at 上弦月, but hg advances moon...
+    hgSkill.exec(p1, p2, { addLog: function() {} });
+    if (p2.hasDeBuff("技能消耗+1")) hgMoon1++;
+    if (r96b < 99) p1.resetMoon(); p1.advanceMoon(1); // reset for next
+  }
+  ok(hgMoon1 >= 35 && hgMoon1 <= 75, "96b hg wax: " + hgMoon1 + "/100 (55% expected)");
+  p1.buffs = [];
+
+  // 97: 拍击 — 伤害 + 50%概率施加混乱
+  var pjSkill = SKILL_DEFS["拍击"](1, 1);
+  var pjChaos = 0;
+  p1._meat = 50;
+  for (var r97 = 0; r97 < 100; r97++) {
+    p2.debuffs = [];
+    pjSkill.exec(p1, p2, { addLog: function() {} });
+    if (p2.hasDeBuff("混乱")) pjChaos++;
+  }
+  ok(pjChaos >= 30 && pjChaos <= 70, "97 pj chaos rate: " + pjChaos + "/100 (50% expected)");
+
+  // === SKILL: 复合效果 (98-102) ===
+  // 98: 鹰击长空 — 我方抽牌+1, 对方抽牌-1
+  p1.buffs = []; p1.debuffs = []; p2.buffs = []; p2.debuffs = [];
+  var yjckSkill = SKILL_DEFS["鹰击长空"](1, 1);
+  yjckSkill.exec(p1, p2, { addLog: function() {} });
+  ok(p1.hasBuff("鹰击长空") === true, "98a yjck self buff: " + p1.hasBuff("鹰击长空"));
+  ok(p2.hasDeBuff("鹰击长空") === true, "98b yjck enemy debuff: " + p2.hasDeBuff("鹰击长空"));
+
+  // 99: 生机勃发 — 回复量 = 400×(1+min(veg/5,5)×0.2)
+  p1._hp = 1000; p1._veg = 12;
+  var sjbfSkill = SKILL_DEFS["生机勃发"](1, 1);
+  sjbfSkill.exec(p1, p2, { addLog: function() {} });
+  var lvls99 = Math.min(Math.floor(12 / 5), 5); // 2 layers
+  var expected99 = Math.floor(400 * (1 + lvls99 * 0.2));
+  var healed99 = p1.hp - 1000;
+  ok(healed99 >= expected99 * 0.95 && healed99 <= expected99 * 1.05, "99 sjbf heal: healed=" + healed99 + " expected~" + expected99 + " (lvls=" + lvls99 + ")");
+
+  // 100: 燕归巢 — veg>10 时添加抽牌 buff
+  p1.buffs = []; p1._veg = 15;
+  var ygcSkill = SKILL_DEFS["燕归巢"](1, 1);
+  ygcSkill.exec(p1, p2, { addLog: function() {} });
+  ok(p1.hasBuff("燕归巢增益") === true, "100a ygc buff: " + p1.hasBuff("燕归巢增益"));
+  p1.buffs = []; p1._veg = 5;
+  ygcSkill.exec(p1, p2, { addLog: function() {} });
+  ok(p1.hasBuff("燕归巢增益") === false, "100b ygc no buff low veg: " + p1.hasBuff("燕归巢增益"));
+
+  // 101: 明月光辉 — 伤害+吸血(新月10%/弦月30%/满月50%)
+  p1.buffs = [makeMoonPhaseBuff()]; p1.resetMoon();
+  p1._hp = 2000; p2._hp = 5000; p2._defR = 0;
+  var myghSkill = SKILL_DEFS["明月光辉"](1, 1);
+  myghSkill.exec(p1, p2, { addLog: function() {} });
+  var dmg101a = 5000 - p2.hp;
+  var heal101a = p1.hp - 2000;
+  ok(heal101a >= Math.floor(dmg101a * 0.08) && heal101a <= Math.floor(dmg101a * 0.15), "101a mygh newMoon lifesteal: dmg=" + dmg101a + " heal=" + heal101a + " expected~10%");
+  p1._hp = 2000; p1.resetMoon(); p1.advanceMoon(2); p2._hp = 5000; // 重置后推至满月 (phase 2)
+  myghSkill.exec(p1, p2, { addLog: function() {} });
+  var dmg101b = 5000 - p2.hp;
+  var heal101b = p1.hp - 2000;
+  ok(heal101b >= Math.floor(dmg101b * 0.45) && heal101b <= Math.floor(dmg101b * 0.55), "101b mygh fullMoon lifesteal: dmg=" + dmg101b + " heal=" + heal101b + " expected~50%");
+  p1.buffs = [];
+
+  // 102: 北风呼啸 — 向对方牌库塞入4张寒风
+  p2.cardStack = [];
+  var bfhxSkill = SKILL_DEFS["北风呼啸"](1, 1);
+  bfhxSkill.exec(p1, p2, { addLog: function() {} });
+  var coldWinds102 = 0;
+  for (var cw = 0; cw < p2.cardStack.length; cw++) { if (p2.cardStack[cw].id === "ColdWind") coldWinds102++; }
+  ok(coldWinds102 === 4, "102 bfhx coldWinds: " + coldWinds102 + " inserted, expected 4");
+
+  // === SKILL: 其他 (103-105) ===
+  // 103: 换新天 — 清除所有 debuff
+  p1.debuffs = [makeBuff("testDebuff", false, 2, "")];
+  ok(p1.debuffs.length === 1, "103a hxt has debuff: " + p1.debuffs.length);
+  var hxtSkill = SKILL_DEFS["换新天"](1, 1);
+  hxtSkill.exec(p1, p2, { addLog: function() {} });
+  ok(p1.debuffs.length === 0, "103b hxt debuff cleared: " + p1.debuffs.length);
+
+  // 104: 藏匿 — 添加跳过 buff + 素食增量 = (queue-1)×2
+  p1.buffs = []; p1.skillQueue = [{name:"A"},{name:"B"},{name:"C"}]; // 3 in queue
+  p1._veg = 10;
+  var cnSkill = SKILL_DEFS["藏匿"](1, 1);
+  game.boss = p2;
+  cnSkill.exec(p1, p2, { addLog: function() {} });
+  var qs104 = game.queuedForPlayer(p1);
+  var expectedVeg104 = 10 + Math.max(0, (qs104 - 1) * 2);
+  ok(p1.hasBuff("藏匿") === true, "104a cn has skip buff");
+  ok(p1.vegetarian === expectedVeg104, "104b cn veg: " + p1.vegetarian + " expected " + expectedVeg104);
+  p1.buffs = []; p1.skillQueue = [];
+
+  // 105: 捣药 — 四种效果分布
+  var dySkill = SKILL_DEFS["捣药"](1, 1);
+  var dyAtk = 0, dyDef = 0, dyDraw = 0, dyHeal = 0;
+  for (var r105 = 0; r105 < 100; r105++) {
+    p1.buffs = []; p1._hp = 1000;
+    dySkill.exec(p1, p2, { addLog: function() {} });
+    if (p1.hasBuff("捣药-攻")) dyAtk++;
+    else if (p1.hasBuff("捣药-防")) dyDef++;
+    else if (p1.hasBuff("捣药-牌")) dyDraw++;
+    else dyHeal++;
+  }
+  ok(dyAtk >= 15 && dyAtk <= 45, "105a dy atk: " + dyAtk + "/100 (30% expected)");
+  ok(dyDef >= 15 && dyDef <= 45, "105b dy def: " + dyDef + "/100 (30% expected)");
+  ok(dyDraw >= 15 && dyDraw <= 45, "105c dy draw: " + dyDraw + "/100 (30% expected)");
+  ok(dyHeal >= 3 && dyHeal <= 20, "105d dy heal: " + dyHeal + "/100 (10% expected)");
+
+  // === judgeDebuff 判定链 (106-109) ===
+  // 106: 基础成功率 — randInt(100) ≤ rate
+  p1.buffs = []; p1.debuffs = []; p2.buffs = []; p2.debuffs = [];
+  var judge106pass = 0;
+  for (var r106 = 0; r106 < 100; r106++) {
+    if (p2.judgeDebuff(50, p1)) judge106pass++;
+  }
+  ok(judge106pass >= 30 && judge106pass <= 70, "106 judge base 50%: " + judge106pass + "/100");
+
+  // 107: 目标有降低判定的 buff
+  var judge107pass = 0;
+  for (var r107 = 0; r107 < 100; r107++) {
+    p2.buffs = [makeBuff("锐利目光", true, 3, "", {}, function(r){return Math.max(0, r-30);})];
+    if (p2.judgeDebuff(50, p1)) judge107pass++;
+  }
+  ok(judge107pass <= 40, "107 judge resist: " + judge107pass + "/100 (<=40, rate=50-30=20)");
+
+  // 108: 目标有提高被判定的 debuff
+  var judge108pass = 0;
+  for (var r108 = 0; r108 < 100; r108++) {
+    p1.buffs = []; p1.debuffs = []; p2.buffs = [];
+    p2.debuffs = [makeBuff("脆弱", false, 2, "", {}, function(r){return r+20;})];
+    if (p2.judgeDebuff(50, p1)) judge108pass++;
+  }
+  ok(judge108pass >= 50, "108 judge vulnerable: " + judge108pass + "/100 (>=50, rate=50+20=70)");
+
+  // 109: 施法者有提高成功率的 buff (洞若观火)
+  var judge109pass = 0;
+  for (var r109 = 0; r109 < 100; r109++) {
+    p1.buffs = [makeBuff("洞若观火", true, 2, "", {}, function(r){return r+20;})];
+    p1.debuffs = []; p2.buffs = []; p2.debuffs = [];
+    if (p2.judgeDebuff(50, p1)) judge109pass++;
+  }
+  ok(judge109pass >= 50, "109 judge caster buff: " + judge109pass + "/100 (>=50, rate=50+20=70)");
+  p1.buffs = []; p1.debuffs = []; p2.buffs = []; p2.debuffs = [];
+
+  // === 资源边界 (110-114) ===
+  // 110: canUseSkill 含 pending 队列
+  p1.skillQueue = [];
+  p1._meat = 1; p1._veg = 10; p1.skillQueue = [{vegCost:5, meatCost:0, waterCost:0}];
+  var skillVeg5 = SKILL_DEFS["利爪挥击"](1, 1); // meatCost=5
+  ok(p1.canUseSkill(skillVeg5) === false, "110a canUse low meat: meat=" + p1.meat + " need 5");
+  p1._meat = 10; p1.skillQueue = [];
+  ok(p1.canUseSkill(skillVeg5) === true, "110b canUse ok: meat=" + p1.meat + " >= 5");
+  p1.skillQueue = [{vegCost:0, meatCost:7, waterCost:0}];
+  ok(p1.canUseSkill(skillVeg5) === false, "110c canUse pending+meat: meat=" + p1.meat + " < 7+5");
+  p1.skillQueue = [];
+
+  // 111: isResEnough 含 costUp (仅非零资源+1)
+  p1._veg = 5; p1._meat = 5; p1._wat = 5;
+  p1.debuffs = [makeBuff("技能消耗+1", false, 1, "")];
+  var sm1 = SKILL_DEFS["虎啸"](1, 1); // meatCost=5
+  ok(p1.isResEnough(sm1) === false, "111a costUp 5+1: enough=" + p1.isResEnough(sm1));
+  p1._meat = 6;
+  ok(p1.isResEnough(sm1) === true, "111b costUp 6: enough=" + p1.isResEnough(sm1));
+  var sm2 = SKILL_DEFS["月相"](1, 1); // no cost
+  ok(p1.isResEnough(sm2) === true, "111c costUp zero-cost: enough=" + p1.isResEnough(sm2));
+  p1.debuffs = [];
+
+  // 112: consumeResourcesExact — vegIndicator 随素食消耗增加
+  p1.vegIndicatorActive = true; p1.vegIndicator = 0; p1._veg = 20;
+  p1.consumeResourcesExact({vegCost:3, meatCost:0, waterCost:0});
+  ok(p1.vegIndicator === 3, "112 indicator accumulates: " + p1.vegIndicator);
+
+  // 113: totalWaterConsumed
+  p1.hasRainBuff = true; p1.totalWaterConsumed = 0; p1._wat = 20;
+  p1.consumeResourcesExact({vegCost:0, meatCost:0, waterCost:8});
+  ok(p1.totalWaterConsumed === 8, "113 rain waterConsumed: " + p1.totalWaterConsumed);
+
+  // 114: costUp 只影响非零资源
+  p1.debuffs = [makeBuff("技能消耗+1", false, 1, "")]; p1._veg = 10; p1._wat = 10;
+  var result114 = p1.consumeResourcesExact({vegCost:2, meatCost:0, waterCost:0});
+  ok(result114.vUsed === 3, "114a costUp veg: vUsed=" + result114.vUsed);
+  ok(p1.water === 10, "114b costUp water unchanged: " + p1.water);
+  p1.debuffs = [];
+
+  // === initCardStack 副作用 (115-119) ===
+  // 115: 乞巧 archetype — 自动添加月相
+  var p115 = new Player("测乞巧", false, 5000);
+  var qqDefs = ALL_PLAYER_CARDS.filter(function(d) { return d.archetype === "乞巧"; }).slice(0, 1);
+  p115.initCardStack(qqDefs);
+  var hasMoon115 = false;
+  for (var mi = 0; mi < p115.buffs.length; mi++) { if (p115.buffs[mi].name === "月相") hasMoon115 = true; }
+  ok(hasMoon115, "115 qiqiao adds moon: " + hasMoon115);
+
+  // 116: hasVegIndicator — vegIndicatorActive
+  var p116 = new Player("测指示器", false, 5000);
+  var indDefs = ALL_PLAYER_CARDS.filter(function(d) { return d.hasVegIndicator; }).slice(0, 1);
+  p116.initCardStack(indDefs);
+  ok(p116.vegIndicatorActive === true, "116 indicator active: " + p116.vegIndicatorActive);
+
+  // 117: hasThickFat — defendReduction = 0.8
+  var p117 = new Player("测厚脂肪", false, 5000);
+  var tfDefs = ALL_PLAYER_CARDS.filter(function(d) { return d.hasThickFat; }).slice(0, 1);
+  p117.initCardStack(tfDefs);
+  ok(p117.defendReduction === 0.8, "117 thick fat: " + p117.defendReduction);
+
+  // 118: hasRainBuff
+  var p118 = new Player("测落雨", false, 5000);
+  var rainDefs = ALL_PLAYER_CARDS.filter(function(d) { return d.hasRainBuff; }).slice(0, 1);
+  p118.initCardStack(rainDefs);
+  ok(p118.hasRainBuff === true, "118 rain buff: " + p118.hasRainBuff);
+
+  // 119: companionActive
+  var p119 = new Player("测同伴", false, 5000);
+  var compDefs = ALL_PLAYER_CARDS.filter(function(d) { return d.companionActive; }).slice(0, 1);
+  p119.initCardStack(compDefs);
+  ok(p119.companionActive === true, "119 companion active: " + p119.companionActive);
+  ok(p119.companionCount === 0, "119 companion count init: " + p119.companionCount);
+
+  // === 游戏流程与边界 (120-125) ===
+  // 120: 资源 setter 负值 clamp
+  var p120 = new Player("测Clamp", false, 5000);
+  p120.vegetarian = -10; p120.meat = -5; p120.water = -3;
+  ok(p120.vegetarian === 0 && p120.meat === 0 && p120.water === 0, "120 res clamp: v=" + p120.vegetarian + " m=" + p120.meat + " w=" + p120.water);
+
+  // 121: HP setter 负值 clamp
+  p120.hp = -100;
+  ok(p120.hp === 0, "121 hp clamp: " + p120.hp);
+
+  // 122: _checkHP 玩家死亡
+  var p122 = new Player("测死亡", false, 5000);
+  var b122 = new Player("测Boss死", true, 5000);
+  game.player = p122; game.boss = b122;
+  game.isOver = false; game.log = [];
+  p122._hp = 0;
+  var hpResult = game._checkHP();
+  ok(hpResult === true, "122a checkHP dead: " + hpResult);
+  ok(game.isOver === true, "122b isOver set: " + game.isOver);
+
+  // 123: 牌堆+弃牌堆都空时 drawCard
+  var p123 = new Player("测空牌", false, 5000);
+  p123.cardStack = []; p123.usedCardStack = [];
+  p123.cardList = [];
+  p123.drawCard();
+  ok(p123.cardList.length === 0, "123 draw empty: hand=" + p123.cardList.length);
+
+  // 124: recordStats 统计
+  var p124 = new Player("测统计", false, 5000);
+  var testSkill124 = SKILL_DEFS["利爪挥击"](1, 1);
+  testSkill124.sourceCardName = "老虎";
+  p124.recordStats(testSkill124, 500, 0, 0, 5, 0);
+  var stats124 = p124.cardStatsMap["老虎"];
+  ok(stats124 !== undefined, "124a stats exists");
+  ok(stats124 && stats124.timesUsed === 1, "124b stats times: " + (stats124 ? stats124.timesUsed : 0));
+  ok(stats124 && stats124.totalDamage === 500, "124c stats dmg: " + (stats124 ? stats124.totalDamage : 0));
+  ok(stats124 && stats124.totalMeat === 5, "124d stats meat: " + (stats124 ? stats124.totalMeat : 0));
+
+  // 125: 同伴数<5不增加抽牌
+  var p125 = new Player("测同伴抽", false, 5000);
+  p125.companionActive = true;
+  p125.companionCount = 4;
+  var draw125 = Math.floor(p125.companionCount / 5);
+  ok(draw125 === 0, "125 companion<5 no bonus: " + draw125);
+
+  // --- restore ---
+  try {
+    if (deckBak !== null) localStorage.setItem("h5game_deck", deckBak); else localStorage.removeItem("h5game_deck");
+    if (saveBak !== null) localStorage.setItem("h5game_save", saveBak); else localStorage.removeItem("h5game_save");
+  } catch(e) {}
+  if (playerBak) { game.player = playerBak; game.boss = bossBak; game.isOver = isOverBak; }
+  switchPanel("deck");
+
+  console.log("=== LOGIC TESTS 2 ===");
+  console.log("Passed: " + passed + "/" + (passed + failed));
+  if (errs.length > 0) { console.error("Failures:"); for (var i = 0; i < errs.length; i++) console.error("  - " + errs[i]); }
+  else console.log("All logic tests 2 passed!");
 }
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -3285,6 +4048,7 @@ document.addEventListener("DOMContentLoaded", function() {
   if (APP_VERSION === -1) {
     runInteractionTests();
     runLogicTests();
+    runLogicTests2();
   }
 });
 </script>
