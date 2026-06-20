@@ -607,7 +607,7 @@ function initSettings() {
 }
 
 var CHANGELOG = [
-  { date: "2026-06-15", text: "·新增雪豹、北极熊、青蛙三张卡牌" },
+  { date: "2026-06-15", text: "·新增海豹、北极熊、青蛙三张卡牌" },
   { date: "2026-06-14", text: "·调整肉食的产量，每回合获得的肉食减少1点<br>·安居技能调整：1回合提高50%抵挡率->2回合提高30%抵挡率<br>·新增基本春晖体系2推荐卡组" },
   { date: "2026-06-10", text: "增强老鼠，将藏匿中获得的素食由1->2" },
   { date: "2026-06-09", text: "新增松鸦、松鼠、狮子三张卡牌，完善春晖体系" },
@@ -1130,7 +1130,7 @@ defSkill("安居", {v:5}, "临时提高30%抵挡率两回合", function(you,enem
   this.logDesc = you.name + '安居乐业，抵挡率临时提高30%';
 });
 
-// === SnowLeopard/PolarBear/Frog skills ===
+// === Seal/PolarBear/Frog skills ===
 defSkill("厚脂肪", {v:0}, "抵挡成功后减少的伤害变为80%", function(you,enemy,ctx){
   this.logDesc = '厚脂肪让抵挡减免提升至80%';
 }, {isPassive:true});
@@ -1240,7 +1240,7 @@ var ALL_PLAYER_CARDS = [
   {id:"Lion",name:"狮子",type:"LAND",slaughterNum:1,archetype:"猛兽",skills:["狮吼","不遗余力"]},
   {id:"Jay",name:"松鸦",type:"SKY",slaughterNum:1,archetype:"春晖",hasVegIndicator:true,skills:["贮藏","筑巢","啄击"]},
   {id:"Squirrel",name:"松鼠",type:"LAND",slaughterNum:1,archetype:"春晖",hasVegIndicator:true,skills:["贮藏","掷物伤人","安居"]},
-  {id:"SnowLeopard",name:"雪豹",type:"SEA",slaughterNum:1,archetype:"遨游",hasThickFat:true,companionActive:true,skills:["厚脂肪","疾游","成群结队"]},
+  {id:"Seal",name:"海豹",type:"SEA",slaughterNum:1,archetype:"遨游",hasThickFat:true,companionActive:true,skills:["厚脂肪","疾游","成群结队"]},
   {id:"PolarBear",name:"北极熊",type:"LAND",slaughterNum:1,archetype:"极寒",skills:["拍击","北风呼啸"]},
   {id:"Frog",name:"青蛙",type:"SEA",slaughterNum:1,archetype:"",hasRainBuff:true,skills:["落雨","精准","跃动"]}
 ];
@@ -3370,7 +3370,7 @@ function runLogicTests() {
 
   // createCard for new cards
   var slCard = createCard(ALL_PLAYER_CARDS[22]);
-  ok(slCard.name === "雪豹", "69 snowleopard card: " + slCard.name);
+  ok(slCard.name === "海豹", "69 seal card: " + slCard.name);
   var pbCard = createCard(ALL_PLAYER_CARDS[23]);
   ok(pbCard.name === "北极熊", "69 polarbear card: " + pbCard.name);
   var frCard = createCard(ALL_PLAYER_CARDS[24]);
